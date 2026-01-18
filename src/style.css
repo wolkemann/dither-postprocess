@@ -8,9 +8,14 @@ body {
 
 .impressum {
   position: fixed;
-  bottom: 10px;
-  left: 10px;
+  bottom: 0;
   color: white;
-  font-family: Arial, sans-serif;
-  font-size: 2em;
+  font-size: 1.2em;
+  padding: 0.5rem;
+  background-color: black;
+}
+
+.impressum a {
+  color: rgb(15, 112, 136);
+  text-decoration: none;
 }
