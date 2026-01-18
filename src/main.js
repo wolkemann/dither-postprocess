@@ -548,10 +548,12 @@ presetFolder.addButton({ title: "Vaporwave" }).on("click", () => {
     new THREE.Color(0xfffb96),
   ]);
   ditherPass.uniforms.paletteSize.value = 5;
-  ditherPass.uniforms.matrixWidth.value = 4;
-  ditherPass.uniforms.matrixHeight.value = 1;
-  config.postProcessSettings.width = 4;
-  config.postProcessSettings.height = 1;
+  ditherPass.uniforms.matrixWidth.value = 1;
+  ditherPass.uniforms.matrixHeight.value = 4;
+  ditherPass.uniforms.noiseScale.value = 0.6;
+  config.postProcessSettings.width = 1;
+  config.postProcessSettings.height = 4;
+  config.postProcessSettings.noiseScale = 0.6;
   shaderFolder.refresh();
 });
 
