@@ -8,11 +8,14 @@ import {
 } from "three/examples/jsm/Addons.js";
 import { DEFAULT_PALETTE, DitherShader } from "./shader/dither-shader";
 import { Pane } from "tweakpane";
-import { fillPallette, rgbToHTMLColor } from "./utils";
-
-import "./style.css";
+import {
+  createProgressScreenHTML,
+  fillPallette,
+  rgbToHTMLColor,
+} from "./utils";
 import { DEV_MODE, LIGHT_INTENSITY } from "./constants";
 import gsap from "gsap";
+import "./style.css";
 
 const loader = new GLTFLoader();
 
@@ -127,6 +130,9 @@ createSpotLight(
   Model Loading
 
 *********************************************************************************** */
+
+const loadingScreen = createProgressScreenHTML();
+
 loader.load(
   "art_museum_vr.glb",
   (gltf) => {
@@ -136,8 +142,15 @@ loader.load(
     camera.position.set(-0.31, -0.932, 4.355);
     controls.target.set(0.345, -0.897, 4.36);
     controls.update();
+    loadingScreen.style.display = "none";
   },
-  undefined,
+  (xhr) => {
+    const progressBar = document.querySelector(".progressBar");
+    if (xhr.total) {
+      const percentComplete = (xhr.loaded / xhr.total) * 100;
+      progressBar.style.width = percentComplete + "%";
+    }
+  },
   (error) => {
     console.error(error);
   },
@@ -149,8 +162,8 @@ loader.load(
     const model = gltf.scene;
     model.position.set(-4, -1.63, 4.7);
     model.rotation.set(0, Math.PI / 2, 0);
-
     scene.add(model);
+    loadingScreen.style.display = "none";
   },
   undefined,
   (error) => {

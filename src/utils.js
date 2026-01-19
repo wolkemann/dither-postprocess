@@ -33,3 +33,20 @@ export const fillPallette = (palletteArray) => {
   }
   return palletteArray;
 };
+
+export const createProgressScreenHTML = () => {
+  const loadingDiv = document.createElement("div");
+  loadingDiv.className = "loading";
+
+  const loadingText = document.createElement("span");
+  loadingText.innerText = "LOADING";
+  loadingDiv.appendChild(loadingText);
+
+  const progressBar = document.createElement("div");
+  progressBar.className = "progressBar";
+  loadingDiv.appendChild(progressBar);
+
+  document.body.appendChild(loadingDiv);
+
+  return document.querySelector(".loading");
+};
