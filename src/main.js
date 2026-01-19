@@ -8,11 +8,7 @@ import {
 } from "three/examples/jsm/Addons.js";
 import { DEFAULT_PALETTE, DitherShader } from "./shader/dither-shader";
 import { Pane } from "tweakpane";
-import {
-  createProgressScreenHTML,
-  fillPallette,
-  rgbToHTMLColor,
-} from "./utils";
+import { fillPallette, rgbToHTMLColor } from "./utils";
 import { DEV_MODE, LIGHT_INTENSITY } from "./constants";
 import gsap from "gsap";
 import "./style.css";
@@ -130,8 +126,7 @@ createSpotLight(
   Model Loading
 
 *********************************************************************************** */
-
-const loadingScreen = createProgressScreenHTML();
+const loadingScreen = document.querySelector(".loading");
 
 loader.load(
   "art_museum_vr.glb",
