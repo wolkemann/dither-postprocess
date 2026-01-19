@@ -6,11 +6,38 @@ body {
   margin: 0;
 }
 
-.impressum {
+.loading {
+  width: 100vw;
+  height: 100vh;
+  background-color: black;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   position: fixed;
-  bottom: 10px;
-  left: 10px;
   color: white;
-  font-family: Arial, sans-serif;
-  font-size: 2em;
+  font-size: 3em;
+}
+
+.progressBar {
+  height: 20px;
+  background-color: white;
+  margin-top: 1rem;
+}
+
+.impressum {
+  width: 100vw;
+  position: fixed;
+  bottom: 0;
+  color: white;
+  font-size: 1.2em;
+  padding: 0.5rem;
+  background-color: black;
+  display: flex;
+  gap: 2rem;
+}
+
+.impressum a {
+  color: rgb(20, 155, 189);
+  text-decoration: none;
 }

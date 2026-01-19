@@ -29,7 +29,7 @@ export const DitherShader = {
     palette: {
       value: fillPallette(DEFAULT_PALETTE),
     },
-    noiseScale: { value: 0.1 },
+    noiseScale: { value: 0.5 },
   },
 
   vertexShader: /* glsl */ `
