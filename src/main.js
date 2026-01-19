@@ -13,8 +13,6 @@ import { DEV_MODE, LIGHT_INTENSITY } from "./constants";
 import gsap from "gsap";
 import "./style.css";
 
-const loader = new GLTFLoader();
-
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(
   50,
@@ -127,6 +125,26 @@ createSpotLight(
 
 *********************************************************************************** */
 const loadingScreen = document.querySelector(".loading");
+const manager = new THREE.LoadingManager();
+const loader = new GLTFLoader(manager);
+
+manager.onProgress = (_, loaded, total) => {
+  const progressBar = document.querySelector(".progressBar");
+  gsap.to(progressBar, {
+    width: ((loaded / total) * 100).toFixed(2) + "%",
+    duration: 0.3,
+  });
+};
+manager.onLoad = () => {
+  gsap.to(loadingScreen, {
+    opacity: 0,
+    duration: 1,
+    ease: "power3.inOut",
+    onComplete: () => {
+      loadingScreen.style.display = "none";
+    },
+  });
+};
 
 loader.load(
   "art_museum_vr.glb",
@@ -137,15 +155,8 @@ loader.load(
     camera.position.set(-0.31, -0.932, 4.355);
     controls.target.set(0.345, -0.897, 4.36);
     controls.update();
-    loadingScreen.style.display = "none";
   },
-  (xhr) => {
-    const progressBar = document.querySelector(".progressBar");
-    if (xhr.total) {
-      const percentComplete = (xhr.loaded / xhr.total) * 100;
-      progressBar.style.width = percentComplete + "%";
-    }
-  },
+  undefined,
   (error) => {
     console.error(error);
   },
@@ -158,7 +169,6 @@ loader.load(
     model.position.set(-4, -1.63, 4.7);
     model.rotation.set(0, Math.PI / 2, 0);
     scene.add(model);
-    loadingScreen.style.display = "none";
   },
   undefined,
   (error) => {
@@ -175,6 +185,7 @@ const renderPass = new RenderPass(scene, camera);
 composer.addPass(renderPass);
 
 const ditherPass = new ShaderPass(DitherShader);
+composer.addPass(ditherPass);
 
 let clock = new THREE.Clock();
 let delta = 0;
@@ -405,6 +416,18 @@ window.addEventListener("keyup", (e) => {
       },
     });
   }
+
+  if (e.key === "q" || e.key === "Q") {
+    if (composer.passes.includes(ditherPass)) {
+      composer.removePass(ditherPass);
+    } else {
+      composer.addPass(ditherPass);
+    }
+  }
+
+  if (e.key === "w" || e.key === "W") {
+    pane.hidden = !pane.hidden;
+  }
 });
 
 /* ***********************************************************************************
@@ -425,7 +448,7 @@ let config = {
   postProcessSettings: {
     width: 8,
     height: 8,
-    noiseScale: 0.1,
+    noiseScale: ditherPass.uniforms.noiseScale.value,
     palette: {
       ...configPaletteColors,
     },
@@ -530,8 +553,10 @@ presetFolder.addButton({ title: "Black & White" }).on("click", () => {
   ditherPass.uniforms.paletteSize.value = 2;
   ditherPass.uniforms.matrixWidth.value = 8;
   ditherPass.uniforms.matrixHeight.value = 8;
+  ditherPass.uniforms.noiseScale.value = 0.5;
   config.postProcessSettings.width = 8;
   config.postProcessSettings.height = 8;
+  config.postProcessSettings.noiseScale = 0.5;
   shaderFolder.refresh();
 });
 
