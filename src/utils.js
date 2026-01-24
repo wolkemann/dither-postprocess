@@ -19,17 +19,3 @@ export const rgbToHTMLColor = (r, g, b) => {
     ("0" + b.toString(16)).slice(-2)
   );
 };
-
-export const fillPallette = (palletteArray) => {
-  if (palletteArray.length < MAX_PALLETTE_SIZE) {
-    return palletteArray.concat(
-      new Array(MAX_PALLETTE_SIZE - palletteArray.length).fill(
-        new THREE.Color(0x000000),
-      ),
-    );
-  }
-  if (palletteArray.length > MAX_PALLETTE_SIZE) {
-    return palletteArray.slice(0, MAX_PALLETTE_SIZE);
-  }
-  return palletteArray;
-};

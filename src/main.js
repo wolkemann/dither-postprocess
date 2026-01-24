@@ -6,9 +6,14 @@ import {
   RenderPass,
   ShaderPass,
 } from "three/examples/jsm/Addons.js";
-import { DEFAULT_PALETTE, DitherShader } from "./shader/dither-shader";
+import {
+  DEFAULT_PALETTE,
+  DitherShader,
+  MAX_PALLETTE_SIZE,
+  fillPallette,
+} from "./shader/dither-shader";
 import { Pane } from "tweakpane";
-import { fillPallette, rgbToHTMLColor } from "./utils";
+import { rgbToHTMLColor } from "./utils";
 import { DEV_MODE, LIGHT_INTENSITY } from "./constants";
 import gsap from "gsap";
 import "./style.css";
@@ -180,6 +185,7 @@ loader.load(
  Apply Post Processing
 
 *********************************************************************************** */
+
 const composer = new EffectComposer(renderer);
 const renderPass = new RenderPass(scene, camera);
 composer.addPass(renderPass);
@@ -189,12 +195,11 @@ composer.addPass(ditherPass);
 
 let clock = new THREE.Clock();
 let delta = 0;
-let interval = 1 / 30;
+let interval = 1 / 60;
 
 renderer.setAnimationLoop(animate);
 
 function animate() {
-  requestAnimationFrame(animate);
   delta += clock.getDelta();
 
   if (delta > interval) {
@@ -507,7 +512,7 @@ const paletteFolder = pane.addFolder({
 paletteFolder.addButton({ title: "Add Color" }).on("click", () => {
   const currentPalette = { ...config.postProcessSettings.palette };
   const currentLength = Object.keys(currentPalette).length;
-  if (currentLength < 8) {
+  if (currentLength < MAX_PALLETTE_SIZE) {
     const newColorKey = `color${currentLength + 1}`;
     currentPalette[newColorKey] = "#ffffff";
     config.postProcessSettings.palette = { ...currentPalette };
@@ -517,7 +522,7 @@ paletteFolder.addButton({ title: "Add Color" }).on("click", () => {
     paletteFolder
       .addBinding(config.postProcessSettings.palette, newColorKey)
       .on("change", (ev) => {
-        const color = new THREE.Color(ev.value);
+        const color = new THREE.Color(ev.value).convertLinearToSRGB();
         ditherPass.uniforms.palette.value[currentLength] = color;
         ditherPass.uniforms.paletteSize.value = currentLength + 1;
       });

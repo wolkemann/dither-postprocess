@@ -1,22 +1,38 @@
 import * as THREE from "three";
-import { fillPallette } from "../utils";
+/* ***********************************************************************************
 
+  Shader constants and utility functions
+
+*********************************************************************************** */
 export const MAX_PALLETTE_SIZE = 15;
 export const DEFAULT_PALETTE = [
   new THREE.Color(0x000000),
   new THREE.Color(0xffffff),
 ];
+export const fillPallette = (palletteArray) => {
+  if (palletteArray.length < MAX_PALLETTE_SIZE) {
+    return palletteArray
+      .concat(
+        new Array(MAX_PALLETTE_SIZE - palletteArray.length).fill(
+          new THREE.Color(0x000000),
+        ),
+      )
+      .map((color) => new THREE.Color(color).convertLinearToSRGB());
+  }
+  if (palletteArray.length > MAX_PALLETTE_SIZE) {
+    return palletteArray
+      .slice(0, MAX_PALLETTE_SIZE)
+      .map((color) => new THREE.Color(color).convertLinearToSRGB());
+  }
+  return palletteArray.map((color) =>
+    new THREE.Color(color).convertLinearToSRGB(),
+  );
+};
+/* ***********************************************************************************
 
-/**
- * @module DitherShader
- *
- */
+  Ordered Dithering shader with customizable Bayer matrix size and color palette.
 
-/**
- * Ordered Dithering shader with customizable Bayer matrix size and color palette.
- *
- *
- */
+*********************************************************************************** */
 export const DitherShader = {
   name: "DitherShader",
 
