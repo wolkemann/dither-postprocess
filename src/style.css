@@ -26,6 +26,7 @@ body {
 }
 
 .impressum {
+  user-select: none;
   width: 100vw;
   position: fixed;
   bottom: 0;

@@ -17,6 +17,9 @@ import { rgbToHTMLColor } from "./utils";
 import { DEV_MODE, LIGHT_INTENSITY } from "./constants";
 import gsap from "gsap";
 import "./style.css";
+import Meyda from "meyda";
+
+let isIpodZone = false;
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(
@@ -36,7 +39,7 @@ controls.mouseButtons = {
   MIDDLE: THREE.MOUSE.DOLLY,
   RIGHT: DEV_MODE ? THREE.MOUSE.PAN : undefined,
 };
-controls.enableZoom = false;
+controls.enableZoom = DEV_MODE;
 controls.enableDamping = true;
 controls.dampingFactor = 0.05;
 /* ***********************************************************************************
@@ -63,13 +66,13 @@ function createSpotLight(
   const spotlightHelper = new THREE.SpotLightHelper(spotLight, helperColor);
   if (DEV_MODE) scene.add(spotlightHelper);
 
-  return { spotLight, spotlightHelper };
+  return { light: spotLight, spotlightHelper };
 }
 
 const ambientLight = new THREE.AmbientLight(0xffffff, 2.0);
 scene.add(ambientLight);
 
-createSpotLight(
+const { light: spotlight1 } = createSpotLight(
   LIGHT_INTENSITY,
   new THREE.Vector3(-0.5, 2.7, 4.24),
   new THREE.Vector3(5, 0.8, 4.28),
@@ -77,7 +80,7 @@ createSpotLight(
   "red",
 );
 
-createSpotLight(
+const { light: spotlight2 } = createSpotLight(
   LIGHT_INTENSITY,
   new THREE.Vector3(2.8, 1.7, 3.24),
   new THREE.Vector3(3.2, -0.9, -2.2),
@@ -85,7 +88,7 @@ createSpotLight(
   "blue",
 );
 
-createSpotLight(
+const { light: spotlight3 } = createSpotLight(
   LIGHT_INTENSITY,
   new THREE.Vector3(1.7, 1.7, 5.26),
   new THREE.Vector3(-0.9, -23.1, 60),
@@ -93,7 +96,7 @@ createSpotLight(
   "orange",
 );
 
-createSpotLight(
+const { light: spotlight4 } = createSpotLight(
   LIGHT_INTENSITY,
   new THREE.Vector3(-2.9, 1.7, 5.26),
   new THREE.Vector3(1.2, -17, 60),
@@ -101,7 +104,7 @@ createSpotLight(
   "cyan",
 );
 
-createSpotLight(
+const { light: spotlight5 } = createSpotLight(
   LIGHT_INTENSITY,
   new THREE.Vector3(0.2, 1.7, 3.2),
   new THREE.Vector3(0.3, 0.2, 0.0),
@@ -109,7 +112,7 @@ createSpotLight(
   "green",
 );
 
-createSpotLight(
+const { light: spotlight6 } = createSpotLight(
   LIGHT_INTENSITY,
   new THREE.Vector3(-1.9, 1.7, 3.2),
   new THREE.Vector3(-2.2, 0.2, 0.0),
@@ -117,7 +120,7 @@ createSpotLight(
   "indigo",
 );
 
-createSpotLight(
+const { light: spotlight7 } = createSpotLight(
   LIGHT_INTENSITY,
   new THREE.Vector3(-2.0, 2.8, 4.3),
   new THREE.Vector3(-34.0, -50.8, 4.9),
@@ -180,12 +183,25 @@ loader.load(
     console.error(error);
   },
 );
+loader.load(
+  "ipod.glb",
+  (gltf) => {
+    const model = gltf.scene;
+    model.scale.set(0.07, 0.07, 0.07);
+    model.position.set(-4.5, -0.6, 6.1);
+    model.rotation.set(0, Math.PI / 2, 0);
+    scene.add(model);
+  },
+  undefined,
+  (error) => {
+    console.error(error);
+  },
+);
 /* ***********************************************************************************
 
  Apply Post Processing
 
 *********************************************************************************** */
-
 const composer = new EffectComposer(renderer);
 const renderPass = new RenderPass(scene, camera);
 composer.addPass(renderPass);
@@ -193,6 +209,76 @@ composer.addPass(renderPass);
 const ditherPass = new ShaderPass(DitherShader);
 composer.addPass(ditherPass);
 
+/* ***********************************************************************************
+
+Meyda Audio Analyser Setup
+
+*********************************************************************************** */
+const audioContext = new AudioContext();
+const audioElement = document.querySelector("#bgm");
+const source = audioContext.createMediaElementSource(audioElement);
+source.connect(audioContext.destination);
+
+const analyzer = Meyda.createMeydaAnalyzer({
+  audioContext: audioContext,
+  source: source,
+  bufferSize: 512,
+  featureExtractors: ["rms"],
+  callback: (features) => {
+    const rms = features.rms;
+    ambientLight.intensity = THREE.MathUtils.lerp(
+      ambientLight.intensity,
+      rms * 7,
+      0.5,
+    );
+    spotlight1.intensity = THREE.MathUtils.lerp(
+      spotlight1.intensity,
+      rms * 90,
+      0.5,
+    );
+    spotlight2.intensity = THREE.MathUtils.lerp(
+      spotlight2.intensity,
+      rms * 90,
+      0.5,
+    );
+    spotlight3.intensity = THREE.MathUtils.lerp(
+      spotlight3.intensity,
+      rms * 90,
+      0.5,
+    );
+    spotlight4.intensity = THREE.MathUtils.lerp(
+      spotlight4.intensity,
+      rms * 90,
+      0.5,
+    );
+    spotlight5.intensity = THREE.MathUtils.lerp(
+      spotlight5.intensity,
+      rms * 90,
+      0.5,
+    );
+    spotlight6.intensity = THREE.MathUtils.lerp(
+      spotlight6.intensity,
+      rms * 90,
+      0.5,
+    );
+    spotlight7.intensity = THREE.MathUtils.lerp(
+      spotlight7.intensity,
+      rms * 90,
+      0.5,
+    );
+  },
+});
+analyzer.start();
+
+audioElement.addEventListener("play", () => {
+  audioContext.resume();
+});
+
+/* ***********************************************************************************
+
+ Render Loop
+
+*********************************************************************************** */
 let clock = new THREE.Clock();
 let delta = 0;
 let interval = 1 / 60;
@@ -218,7 +304,7 @@ const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 const artworkTriggers = [];
 
-function moveToArtwork(cameraPos, targetPos) {
+function moveToArtwork(cameraPos, targetPos, quad = "") {
   gsap.to(camera.position, {
     x: cameraPos.x,
     y: cameraPos.y,
@@ -226,7 +312,12 @@ function moveToArtwork(cameraPos, targetPos) {
     duration: 1.5,
     ease: "power3.inOut",
     onUpdate: () => controls.update(),
-    onComplete: () => camera.updateProjectionMatrix(),
+    onComplete: () => {
+      if (quad.userData.areaName === "ipod" && !isIpodZone) {
+        isIpodZone = true;
+      }
+      camera.updateProjectionMatrix();
+    },
   });
 
   gsap.to(controls.target, {
@@ -323,6 +414,16 @@ const statueTrigger = addArtworkTrigger(
   "statue",
   1.2,
 );
+const ipod = addArtworkTrigger(
+  -4.8,
+  0.3,
+  2.7,
+  1.5,
+  1.6,
+  Math.PI / 2,
+  "ipod",
+  1.2,
+);
 
 /* ***********************************************************************************
 
@@ -382,15 +483,25 @@ window.addEventListener("keyup", (e) => {
       if (quad.userData.areaName === "second big portrait")
         offset = new THREE.Vector3(0, 0, 2.5);
 
+      if (quad.userData.areaName === "ipod" && isIpodZone) {
+        if (audioContext.state === "running") {
+          audioContext.suspend();
+          audioElement.pause();
+          return;
+        }
+        audioElement.play();
+      }
+
       offset.applyQuaternion(quad.quaternion);
 
       const newCameraPos = new THREE.Vector3().copy(quad.position).add(offset);
 
-      moveToArtwork(newCameraPos, quad.position);
+      moveToArtwork(newCameraPos, quad.position, quad);
     }
   }
 
   if (e.key === "r" || e.key === "R") {
+    if (isIpodZone) isIpodZone = false;
     // Reset camera position
     gsap.to(camera.position, {
       x: -0.31,
