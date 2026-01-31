@@ -7,11 +7,11 @@ import {
   ShaderPass,
 } from "three/examples/jsm/Addons.js";
 import {
-  DEFAULT_PALETTE,
   DitherShader,
-  MAX_PALLETTE_SIZE,
   fillPallette,
-} from "./shader/dither-shader";
+  DEFAULT_PALETTE,
+  MAX_PALLETTE_SIZE,
+} from "./shader/dither-shader.js";
 import { Pane } from "tweakpane";
 import { rgbToHTMLColor } from "./utils";
 import { DEV_MODE, LIGHT_INTENSITY } from "./constants";
@@ -226,6 +226,7 @@ const analyzer = Meyda.createMeydaAnalyzer({
   featureExtractors: ["rms"],
   callback: (features) => {
     const rms = features.rms;
+
     ambientLight.intensity = THREE.MathUtils.lerp(
       ambientLight.intensity,
       rms * 7,
@@ -268,9 +269,9 @@ const analyzer = Meyda.createMeydaAnalyzer({
     );
   },
 });
-analyzer.start();
 
 audioElement.addEventListener("play", () => {
+  analyzer.start();
   audioContext.resume();
 });
 
@@ -287,7 +288,6 @@ renderer.setAnimationLoop(animate);
 
 function animate() {
   delta += clock.getDelta();
-
   if (delta > interval) {
     controls.update();
     composer.render();
