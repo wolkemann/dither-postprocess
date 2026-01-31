@@ -1,10 +1,9 @@
 {
   "name": "dither-postprocess",
-  "private": true,
   "version": "1.0.0",
   "type": "module",
   "files": [
-    "shader"
+    "./src/shader/dither-shader.js"
   ],
   "scripts": {
     "dev": "vite",
