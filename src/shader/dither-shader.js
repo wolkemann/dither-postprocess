@@ -42,10 +42,13 @@ export const DitherShader = {
     matrixHeight: { value: 8 },
     resolution: { value: { x: window.innerWidth, y: window.innerHeight } },
     paletteSize: { value: MAX_PALLETTE_SIZE },
-    palette: {
-      value: fillPallette(DEFAULT_PALETTE),
-    },
+    palette: { value: fillPallette(DEFAULT_PALETTE) },
+    ditherOffset: { value: 0.5 },
     noiseScale: { value: 0.5 },
+    time: { value: 0.0 },
+    jitterSpeed: { value: 8.0 },
+    jitterFrequency: { value: 20.0 },
+    jitterIntensity: { value: 0.1 },
   },
 
   vertexShader: /* glsl */ `
@@ -67,7 +70,12 @@ export const DitherShader = {
 		uniform vec2 resolution;
 		uniform int paletteSize;
 		uniform vec3 palette[${MAX_PALLETTE_SIZE}];
+		uniform float ditherOffset;
 		uniform float noiseScale;
+		uniform float time;
+		uniform float jitterSpeed;
+		uniform float jitterFrequency;
+		uniform float jitterIntensity;
 
 		varying vec2 vUv;
 
@@ -134,8 +142,7 @@ export const DitherShader = {
 			vec3 closest = palette[0];
 			float minDist = distance(color, palette[0]);
 			
-			for (int i = 1; i < ${MAX_PALLETTE_SIZE}; i++) {
-				if (i >= paletteSize) break;
+			for (int i = 1; i < paletteSize; i++) {
 				float dist = distance(color, palette[i]);
 				if (dist < minDist) {
 					minDist = dist;
@@ -155,9 +162,16 @@ export const DitherShader = {
 			int maxSize = max(matrixWidth, matrixHeight);
 			
 			float threshold = getBayerValue(x, y, maxSize);
+			
+			float luma = dot(texel.rgb, vec3(0.299, 0.587, 0.114));
+			float noiseWave = sin(time * jitterSpeed + (vUv.x + vUv.y) * jitterFrequency);
 
-			vec3 colorWithDither = texel.rgb + (threshold - 0.5) * noiseScale;
+			float jitter = noiseWave * jitterIntensity * luma;
+			float animatedThreshold = threshold;
 
+			if(time > 0.0) animatedThreshold = threshold + jitter;
+			
+			vec3 colorWithDither = texel.rgb + (animatedThreshold - ditherOffset) * noiseScale;
 			vec3 ditherColor = findClosestColor(colorWithDither);
 			
 			gl_FragColor = vec4(ditherColor, texel.a);
